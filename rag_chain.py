@@ -90,19 +90,36 @@ def build_rag_chain():
     return chain
 
 
-def ask(chain, question: str, chat_history: list = None) -> dict:
-    """
-    Ask a question and get answer + sources.
-    Returns: {"answer": str, "sources": list}
-    """
-    if chat_history is None:
-        chat_history = []
+def build_fallback_chain():
+    """Build the conversational RAG chain with a reliable high-capacity fallback model."""
+    vectorstore = load_vectorstore()
+    retriever = vectorstore.as_retriever(
+        search_type="mmr",
+        search_kwargs={
+            "k": TOP_K,
+            "fetch_k": TOP_K * 2,
+        }
+    )
 
-    result = chain.invoke({
-        "question": question,
-        "chat_history": chat_history
-    })
+    # High capacity backup model on HF router
+    llm = ChatOpenAI(
+        model="Qwen/Qwen2.5-72B-Instruct",
+        openai_api_key=HF_TOKEN,
+        openai_api_base="https://router.huggingface.co/v1",
+        temperature=0.3,
+    )
 
+    chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=retriever,
+        return_source_documents=True,
+        combine_docs_chain_kwargs={"prompt": RAG_PROMPT},
+        verbose=False
+    )
+    return chain
+
+
+def _format_result(result) -> dict:
     # Extract unique source pages
     sources = []
     seen = set()
@@ -116,3 +133,46 @@ def ask(chain, question: str, chat_history: list = None) -> dict:
         "answer": result["answer"],
         "sources": sources
     }
+
+
+def ask(chain, question: str, chat_history: list = None) -> dict:
+    """
+    Ask a question and get answer + sources.
+    Uses exponential backoff retries and falls back to a high-capacity model on 429.
+    """
+    if chat_history is None:
+        chat_history = []
+
+    import time
+    max_retries = 3
+    delay = 1.5
+
+    for attempt in range(max_retries):
+        try:
+            result = chain.invoke({
+                "question": question,
+                "chat_history": chat_history
+            })
+            return _format_result(result)
+        except Exception as e:
+            err_msg = str(e)
+            is_rate_limit = any(term in err_msg.lower() for term in ["429", "too_many_requests", "queue_exceeded", "traffic", "rate_limit"])
+            
+            if is_rate_limit and attempt < max_retries - 1:
+                logger.warning(f"Attempt {attempt + 1} failed due to rate limit/queue. Retrying in {delay}s...")
+                time.sleep(delay)
+                delay *= 2
+                continue
+            
+            # Fall back to Qwen 2.5 72B if retries are exhausted or it's another connection error
+            logger.warning(f"Primary model query failed: {err_msg}. Running fallback model (Qwen 2.5 72B)...")
+            try:
+                fallback_chain = build_fallback_chain()
+                result = fallback_chain.invoke({
+                    "question": question,
+                    "chat_history": chat_history
+                })
+                return _format_result(result)
+            except Exception as fallback_err:
+                logger.critical(f"Fallback model query also failed: {fallback_err}")
+                raise e
