@@ -1,7 +1,7 @@
 """
 app.py
-Streamlit chat UI for the University RAG system.
-This is the main entry point for HuggingFace Spaces deployment.
+UniMind — University RAG Study Assistant
+Clean, minimal UI inspired by modern AI chat products.
 """
 
 import os
@@ -10,325 +10,380 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="UniMind — Study Assistant",
+    page_title="UniMind",
     page_icon="🎓",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",
 )
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
+# ── CSS ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&display=swap');
 
-* { font-family: 'Inter', sans-serif; }
-h1, h2, h3, h4, h5, h6, .rag-title, .metric-value { font-family: 'Outfit', sans-serif; }
-code, pre { font-family: 'Inter', monospace; font-size: 0.9em; }
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
 
-/* Background */
+/* ── App background ── */
 .stApp {
-    background: #FDFBF7;
-    color: #2D3748;
+    background-color: #FAF9F7;
+    color: #1a1a1a;
 }
 
-/* Sidebar */
+/* ── Hide default streamlit chrome ── */
+#MainMenu, footer, header { visibility: hidden; }
+[data-testid="stToolbar"] { display: none; }
+
+/* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background: #F4F1EA;
-    border-right: 1px solid #E2E8F0;
+    background: #F2EFE9;
+    border-right: 1px solid #E5E0D8;
+}
+[data-testid="stSidebar"] .stMarkdown p,
+[data-testid="stSidebar"] label {
+    color: #4a4a4a;
+    font-size: 13px;
 }
 
-/* Chat messages */
+/* ── Chat area ── */
 [data-testid="stChatMessage"] {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* User message row */
+[data-testid="stChatMessage"][data-testid*="user-message"],
+div[data-testid="stChatMessage"]:has([data-testid="StyledFullScreenButton"]) {
+    background: transparent;
+}
+
+/* ── Chat input ── */
+[data-testid="stChatInput"] {
     background: #FFFFFF;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #E0DBD3;
     border-radius: 16px;
-    margin: 12px 0;
-    padding: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-
-/* User message */
-[data-testid="stChatMessage"][data-testid*="user"] {
-    background: #FAF8F2;
-    border-color: #D6CBBD;
-    box-shadow: 0 2px 6px rgba(214,203,189,0.2);
-}
-
-/* Chat input */
 [data-testid="stChatInput"] textarea {
-    background: #FFFFFF !important;
-    border: 1px solid #D6CBBD !important;
-    color: #2D3748 !important;
-    border-radius: 12px !important;
+    background: transparent !important;
+    color: #1a1a1a !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 15px !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #AAA49C !important;
 }
 
-[data-testid="stChatInput"] textarea:focus {
-    border-color: #B0A08B !important;
-    box-shadow: 0 0 0 2px rgba(176,160,139,0.2) !important;
-}
-
-/* Buttons */
+/* ── Buttons ── */
 .stButton > button {
     background: #FFFFFF;
-    color: #4A5568;
-    border: 1px solid #CBD5E0;
-    border-radius: 8px;
-    font-weight: 500;
+    color: #3a3a3a;
+    border: 1px solid #DDD8D0;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
     font-size: 13px;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-weight: 500;
+    padding: 8px 14px;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .stButton > button:hover {
-    background: #F4F1EA;
-    border-color: #B0A08B;
-    color: #2D3748;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    background: #F2EFE9;
+    border-color: #C9C3BB;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
 }
 
-/* Source pills */
+/* ── File uploader ── */
+[data-testid="stFileUploader"] {
+    border: 1.5px dashed #D4CFC7;
+    border-radius: 12px;
+    padding: 8px;
+    background: #FDFCFA;
+}
+
+/* ── Divider ── */
+hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
+
+/* ── Source pills ── */
 .source-pill {
     display: inline-block;
-    background: #F4F1EA;
-    border: 1px solid #E2E8F0;
+    background: #F2EFE9;
+    border: 1px solid #E0DBD3;
     border-radius: 20px;
-    padding: 4px 12px;
+    padding: 3px 10px;
     font-size: 11px;
     font-weight: 500;
-    color: #718096;
-    margin: 4px 6px 4px 0;
+    color: #7A756E;
+    margin: 3px 4px 3px 0;
 }
 
-/* Header */
-.rag-header {
-    text-align: center;
-    padding: 3rem 0 1.5rem;
-}
-.rag-title {
-    font-size: 3.2rem;
+/* ── Status badge ── */
+.badge-ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #EDFAF4;
+    border: 1px solid #B7EDD8;
+    color: #1F7A5C;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
     font-weight: 600;
-    background: linear-gradient(135deg, #B0A08B 0%, #D6CBBD 50%, #A0AEC0 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: -0.03em;
 }
-.rag-subtitle {
-    color: #718096;
-    font-size: 1rem;
+.badge-not-ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #B91C1C;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ── Header ── */
+.app-header {
+    text-align: center;
+    padding: 48px 0 16px;
+}
+.app-logo {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+.app-name {
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+}
+.app-tagline {
+    font-size: 15px;
+    color: #9A948C;
     font-weight: 400;
-    margin-top: 0.5rem;
+    margin-top: 6px;
 }
 
-/* Status badge */
-.status-ready {
-    display: inline-block;
-    background: #E6FFFA;
-    border: 1px solid #B2F5EA;
-    color: #319795;
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    font-weight: 600;
+/* ── Welcome screen suggestions ── */
+.suggestion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 560px;
+    margin: 32px auto 0;
 }
-.status-not-ready {
-    display: inline-block;
-    background: #FFF5F5;
-    border: 1px solid #FED7D7;
-    color: #E53E3E;
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-/* Metric cards */
-.metric-card {
+.suggestion-card {
     background: #FFFFFF;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #E5E0D8;
     border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    padding: 14px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #4a4a4a;
+    font-weight: 400;
+    line-height: 1.4;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
-.metric-value {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: #B0A08B;
-}
-.metric-label {
-    font-size: 0.8rem;
+.suggestion-card strong {
+    display: block;
+    color: #1a1a1a;
     font-weight: 500;
-    color: #A0AEC0;
-    margin-top: 4px;
+    margin-bottom: 2px;
+    font-size: 13px;
 }
 
-/* Divider */
-hr { border-color: #E2E8F0; }
+/* ── Metric ── */
+.stat-box {
+    background: #FFFFFF;
+    border: 1px solid #E5E0D8;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #A89880;
+    letter-spacing: -0.02em;
+}
+.stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #B0AA9F;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 </style>
 """, unsafe_allow_html=True)
 
 
-# ── Load RAG chain (cached) ───────────────────────────────────────────────────
-@st.cache_resource(show_spinner="Loading your notes into memory...")
+# ── Cached resources ─────────────────────────────────────────────────────────
+@st.cache_resource(show_spinner="Loading knowledge base...")
 def load_chain():
     from rag_chain import build_rag_chain
     return build_rag_chain()
 
 
 @st.cache_data(show_spinner=False)
-def get_vector_stats():
+def get_vector_count():
     from config import CHROMA_DIR, COLLECTION_NAME, EMBEDDING_MODEL
     try:
         from langchain_chroma import Chroma
         from langchain_huggingface import HuggingFaceEmbeddings
-        embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL, model_kwargs={"device": "cpu"})
-        vs = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings, collection_name=COLLECTION_NAME)
+        emb = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL, model_kwargs={"device": "cpu"})
+        vs = Chroma(persist_directory=CHROMA_DIR, embedding_function=emb, collection_name=COLLECTION_NAME)
         return vs._collection.count()
     except Exception:
         return 0
 
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("### 🎓 UniMind")
-    st.markdown("---")
+# ── State ────────────────────────────────────────────────────────────────────
+from config import CHROMA_DIR
+store_exists = os.path.exists(CHROMA_DIR)
 
-    # Vector store check
-    from config import CHROMA_DIR
-    store_exists = os.path.exists(CHROMA_DIR)
-
-    if store_exists:
-        vec_count = get_vector_stats()
-        st.markdown('<span class="status-ready">● READY</span>', unsafe_allow_html=True)
-        st.markdown("")
-        st.markdown(f'<div class="metric-card"><div class="metric-value">{vec_count:,}</div><div class="metric-label">Vectors Indexed</div></div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<span class="status-not-ready">● NOT READY</span>', unsafe_allow_html=True)
-        st.warning("No notes indexed yet.\nRun `python ingest.py` first.")
-
-    st.markdown("---")
-
-    st.markdown("**📁 Upload & Index Notes**")
-    uploaded_files = st.file_uploader(
-        "Upload PDF notes",
-        type=["pdf"],
-        accept_multiple_files=True,
-        help="Upload your university PDF notes"
-    )
-
-    if uploaded_files:
-        if st.button("📥 Index Uploaded Notes", use_container_width=True):
-            os.makedirs("data", exist_ok=True)
-            for f in uploaded_files:
-                with open(f"data/{f.name}", "wb") as out:
-                    out.write(f.read())
-            with st.spinner("Ingesting notes..."):
-                import subprocess
-                import sys
-                result = subprocess.run([sys.executable, "ingest.py"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    st.success("✓ Notes indexed successfully!")
-                    st.cache_resource.clear()
-                    st.cache_data.clear()
-                    st.rerun()
-                else:
-                    st.error(f"Ingestion failed:\n{result.stderr}")
-
-    st.markdown("---")
-
-    # Clear chat
-    if st.button("🗑️ Clear Chat History", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.chain = None
-        st.cache_resource.clear()
-        st.rerun()
-
-    st.markdown("---")
-    st.markdown("""
-    <div style="font-size:12px; color:#718096; font-weight: 500;">
-    Built with LangChain · ChromaDB<br>
-    HuggingFace · Streamlit<br><br>
-    <a href="https://github.com/abdullahks-devhub" style="color:#B0A08B; text-decoration: none;">github.com/abdullahks-devhub</a>
-    </div>
-    """, unsafe_allow_html=True)
-
-
-# ── Main Area ─────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="rag-header">
-    <div class="rag-title">UniMind</div>
-    <div class="rag-subtitle">// RAG-powered study assistant · ask anything from your notes</div>
-</div>
-""", unsafe_allow_html=True)
-
-# Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chain" not in st.session_state:
     st.session_state.chain = None
 
-# Load chain
 if store_exists and st.session_state.chain is None:
     try:
         st.session_state.chain = load_chain()
     except Exception as e:
         st.error(f"Failed to load chain: {e}")
 
-# Welcome message
-if not st.session_state.messages:
-    st.markdown("""
-    <div style="text-align:center; padding: 4rem 0; color: #4A5568;">
-        <div style="font-size:3.5rem; margin-bottom:1.5rem;">📚</div>
-        <div style="font-size:1rem; font-weight: 400; line-height: 1.6;">
-            Upload your notes in the sidebar, then ask anything.<br><br>
-            <span style="color:#718096;">e.g. "Explain the difference between RAG and fine-tuning"</span><br>
-            <span style="color:#718096;">e.g. "Summarize chapter 3 on neural networks"</span><br>
-            <span style="color:#718096;">e.g. "What are the key concepts I need to know for the exam?"</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 
-# Render chat history
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-        if msg.get("sources"):
-            sources_html = "".join(f'<span class="source-pill">📄 {s}</span>' for s in msg["sources"])
-            st.markdown(f'<div style="margin-top:8px;">{sources_html}</div>', unsafe_allow_html=True)
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("### UniMind")
+    st.markdown("<hr>", unsafe_allow_html=True)
 
-# Chat input
-if prompt := st.chat_input("Ask anything from your notes..."):
-    if not store_exists:
-        st.error("Please upload and index your notes first using the sidebar.")
-    elif st.session_state.chain is None:
-        st.error("Chain not loaded. Please check your HuggingFace API token in the .env file.")
+    # Status
+    if store_exists:
+        vec_count = get_vector_count()
+        st.markdown(f'<div class="badge-ready">● Ready</div>', unsafe_allow_html=True)
+        st.markdown("")
+        st.markdown(f'<div class="stat-box"><div class="stat-number">{vec_count:,}</div><div class="stat-label">Chunks Indexed</div></div>', unsafe_allow_html=True)
     else:
-        # Add user message
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        st.markdown('<div class="badge-not-ready">● No Index Found</div>', unsafe_allow_html=True)
 
-        # Get answer
-        with st.chat_message("assistant"):
-            with st.spinner("Searching your notes..."):
-                try:
-                    from rag_chain import ask
-                    result = ask(st.session_state.chain, prompt)
-                    answer = result["answer"]
-                    sources = result["sources"]
+    st.markdown("<hr>", unsafe_allow_html=True)
 
-                    st.markdown(answer)
-                    if sources:
-                        sources_html = "".join(f'<span class="source-pill">📄 {s}</span>' for s in sources)
-                        st.markdown(f'<div style="margin-top:8px;">{sources_html}</div>', unsafe_allow_html=True)
+    # Upload
+    with st.expander("📎 Upload Notes", expanded=not store_exists):
+        uploaded_files = st.file_uploader(
+            "PDF files",
+            type=["pdf"],
+            accept_multiple_files=True,
+            label_visibility="collapsed",
+        )
+        if uploaded_files and st.button("Index Notes", use_container_width=True):
+            os.makedirs("data", exist_ok=True)
+            for f in uploaded_files:
+                with open(f"data/{f.name}", "wb") as out:
+                    out.write(f.read())
+            with st.spinner("Indexing..."):
+                import subprocess, sys
+                result = subprocess.run([sys.executable, "ingest.py"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    st.success("Done!")
+                    st.cache_resource.clear()
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error(result.stderr[-500:] if result.stderr else "Ingestion failed.")
 
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": answer,
-                        "sources": sources
-                    })
-                except Exception as e:
-                    err_msg = f"Error: {str(e)}"
-                    st.error(err_msg)
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    if st.button("Clear conversation", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.chain = None
+        st.cache_resource.clear()
+        st.rerun()
+
+    st.markdown("")
+    st.markdown(
+        '<div style="font-size:11px;color:#B0AA9F;">LangChain · ChromaDB · HuggingFace</div>',
+        unsafe_allow_html=True
+    )
+
+
+# ── Main area ─────────────────────────────────────────────────────────────────
+col_main = st.container()
+
+with col_main:
+    # Header — only show when chat is empty
+    if not st.session_state.messages:
+        st.markdown("""
+        <div class="app-header">
+            <div class="app-logo">🎓</div>
+            <div class="app-name">UniMind</div>
+            <div class="app-tagline">Ask anything from your university notes</div>
+        </div>
+        <div class="suggestion-grid">
+            <div class="suggestion-card"><strong>Summarize a topic</strong>Explain the key ideas from Chapter 3</div>
+            <div class="suggestion-card"><strong>Exam prep</strong>What are the most important concepts to know?</div>
+            <div class="suggestion-card"><strong>Deep dive</strong>Explain how AES encryption works</div>
+            <div class="suggestion-card"><strong>Compare</strong>What is the difference between DES and AES?</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Compact header when chatting
+        st.markdown(
+            '<div style="text-align:center;padding:16px 0 8px;font-size:18px;font-weight:600;color:#1a1a1a;letter-spacing:-0.02em;">UniMind</div>',
+            unsafe_allow_html=True
+        )
+
+    st.markdown("")
+
+    # Chat history
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+            if msg.get("sources"):
+                pills = "".join(f'<span class="source-pill">📄 {s}</span>' for s in msg["sources"])
+                st.markdown(f'<div style="margin-top:8px;">{pills}</div>', unsafe_allow_html=True)
+
+    # Input
+    if prompt := st.chat_input("Ask anything from your notes…"):
+        if not store_exists:
+            st.error("No notes indexed yet — upload your PDFs in the sidebar first.")
+        elif st.session_state.chain is None:
+            st.error("Chain not ready. Check your HUGGINGFACEHUB_API_TOKEN.")
+        else:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            with st.chat_message("assistant"):
+                with st.spinner(""):
+                    try:
+                        from rag_chain import ask
+                        result = ask(st.session_state.chain, prompt)
+                        answer = result["answer"]
+                        sources = result["sources"]
+
+                        st.markdown(answer)
+                        if sources:
+                            pills = "".join(f'<span class="source-pill">📄 {s}</span>' for s in sources)
+                            st.markdown(f'<div style="margin-top:8px;">{pills}</div>', unsafe_allow_html=True)
+
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": answer,
+                            "sources": sources,
+                        })
+                    except Exception as e:
+                        st.error(f"Something went wrong: {e}")
