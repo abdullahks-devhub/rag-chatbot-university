@@ -21,145 +21,151 @@ st.set_page_config(
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600&display=swap');
 
-* { font-family: 'IBM Plex Sans', sans-serif; }
-code, pre { font-family: 'IBM Plex Mono', monospace; }
+* { font-family: 'Inter', sans-serif; }
+h1, h2, h3, h4, h5, h6, .rag-title, .metric-value { font-family: 'Outfit', sans-serif; }
+code, pre { font-family: 'Inter', monospace; font-size: 0.9em; }
 
 /* Background */
 .stApp {
-    background: #0a0a0f;
-    color: #e8e8f0;
+    background: #FDFBF7;
+    color: #2D3748;
 }
 
 /* Sidebar */
 [data-testid="stSidebar"] {
-    background: #0f0f1a;
-    border-right: 1px solid #1e1e3a;
+    background: #F4F1EA;
+    border-right: 1px solid #E2E8F0;
 }
 
 /* Chat messages */
 [data-testid="stChatMessage"] {
-    background: #111120;
-    border: 1px solid #1e1e3a;
-    border-radius: 12px;
-    margin: 8px 0;
-    padding: 4px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    margin: 12px 0;
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 /* User message */
 [data-testid="stChatMessage"][data-testid*="user"] {
-    border-color: #3d3d8a;
+    background: #FAF8F2;
+    border-color: #D6CBBD;
+    box-shadow: 0 2px 6px rgba(214,203,189,0.2);
 }
 
 /* Chat input */
 [data-testid="stChatInput"] textarea {
-    background: #111120 !important;
-    border: 1px solid #2a2a5a !important;
-    color: #e8e8f0 !important;
+    background: #FFFFFF !important;
+    border: 1px solid #D6CBBD !important;
+    color: #2D3748 !important;
     border-radius: 12px !important;
-    font-family: 'IBM Plex Sans', sans-serif !important;
 }
 
 [data-testid="stChatInput"] textarea:focus {
-    border-color: #5555cc !important;
-    box-shadow: 0 0 0 2px rgba(85,85,204,0.2) !important;
+    border-color: #B0A08B !important;
+    box-shadow: 0 0 0 2px rgba(176,160,139,0.2) !important;
 }
 
 /* Buttons */
 .stButton > button {
-    background: #1e1e3a;
-    color: #a0a0e0;
-    border: 1px solid #2a2a5a;
+    background: #FFFFFF;
+    color: #4A5568;
+    border: 1px solid #CBD5E0;
     border-radius: 8px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .stButton > button:hover {
-    background: #2a2a5a;
-    border-color: #5555cc;
-    color: #e8e8f0;
+    background: #F4F1EA;
+    border-color: #B0A08B;
+    color: #2D3748;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 /* Source pills */
 .source-pill {
     display: inline-block;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: #F4F1EA;
+    border: 1px solid #E2E8F0;
     border-radius: 20px;
-    padding: 2px 12px;
+    padding: 4px 12px;
     font-size: 11px;
-    color: #7070b0;
-    margin: 2px 4px 2px 0;
-    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: #718096;
+    margin: 4px 6px 4px 0;
 }
 
 /* Header */
 .rag-header {
     text-align: center;
-    padding: 2rem 0 1rem;
+    padding: 3rem 0 1.5rem;
 }
 .rag-title {
-    font-size: 2.8rem;
+    font-size: 3.2rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #7070e0 0%, #a070f0 50%, #7090ff 100%);
+    background: linear-gradient(135deg, #B0A08B 0%, #D6CBBD 50%, #A0AEC0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
 }
 .rag-subtitle {
-    color: #5050a0;
-    font-size: 0.95rem;
-    font-family: 'IBM Plex Mono', monospace;
-    margin-top: 0.3rem;
+    color: #718096;
+    font-size: 1rem;
+    font-weight: 400;
+    margin-top: 0.5rem;
 }
 
 /* Status badge */
 .status-ready {
     display: inline-block;
-    background: #0a2a0a;
-    border: 1px solid #1a4a1a;
-    color: #50c050;
+    background: #E6FFFA;
+    border: 1px solid #B2F5EA;
+    color: #319795;
     border-radius: 20px;
-    padding: 3px 14px;
-    font-size: 11px;
-    font-family: 'IBM Plex Mono', monospace;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
 }
 .status-not-ready {
     display: inline-block;
-    background: #2a0a0a;
-    border: 1px solid #4a1a1a;
-    color: #c05050;
+    background: #FFF5F5;
+    border: 1px solid #FED7D7;
+    color: #E53E3E;
     border-radius: 20px;
-    padding: 3px 14px;
-    font-size: 11px;
-    font-family: 'IBM Plex Mono', monospace;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 /* Metric cards */
 .metric-card {
-    background: #111120;
-    border: 1px solid #1e1e3a;
-    border-radius: 10px;
-    padding: 12px 16px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 .metric-value {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: 600;
-    color: #7070e0;
-    font-family: 'IBM Plex Mono', monospace;
+    color: #B0A08B;
 }
 .metric-label {
-    font-size: 0.75rem;
-    color: #505080;
-    margin-top: 2px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #A0AEC0;
+    margin-top: 4px;
 }
 
 /* Divider */
-hr { border-color: #1e1e3a; }
+hr { border-color: #E2E8F0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -241,10 +247,10 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("""
-    <div style="font-size:11px; color:#303060; font-family:'IBM Plex Mono',monospace;">
+    <div style="font-size:12px; color:#718096; font-weight: 500;">
     Built with LangChain · ChromaDB<br>
     HuggingFace · Streamlit<br><br>
-    <a href="https://github.com/abdullahks-devhub" style="color:#404080;">github.com/abdullahks-devhub</a>
+    <a href="https://github.com/abdullahks-devhub" style="color:#B0A08B; text-decoration: none;">github.com/abdullahks-devhub</a>
     </div>
     """, unsafe_allow_html=True)
 
@@ -273,13 +279,13 @@ if store_exists and st.session_state.chain is None:
 # Welcome message
 if not st.session_state.messages:
     st.markdown("""
-    <div style="text-align:center; padding: 3rem 0; color: #303060;">
-        <div style="font-size:3rem; margin-bottom:1rem;">📚</div>
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.9rem;">
+    <div style="text-align:center; padding: 4rem 0; color: #4A5568;">
+        <div style="font-size:3.5rem; margin-bottom:1.5rem;">📚</div>
+        <div style="font-size:1rem; font-weight: 400; line-height: 1.6;">
             Upload your notes in the sidebar, then ask anything.<br><br>
-            <span style="color:#404080;">e.g. "Explain the difference between RAG and fine-tuning"</span><br>
-            <span style="color:#404080;">e.g. "Summarize chapter 3 on neural networks"</span><br>
-            <span style="color:#404080;">e.g. "What are the key concepts I need to know for the exam?"</span>
+            <span style="color:#718096;">e.g. "Explain the difference between RAG and fine-tuning"</span><br>
+            <span style="color:#718096;">e.g. "Summarize chapter 3 on neural networks"</span><br>
+            <span style="color:#718096;">e.g. "What are the key concepts I need to know for the exam?"</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -326,4 +332,3 @@ if prompt := st.chat_input("Ask anything from your notes..."):
                 except Exception as e:
                     err_msg = f"Error: {str(e)}"
                     st.error(err_msg)
-                    st.session_state.messages.append({"role": "assistant", "content": err_msg})

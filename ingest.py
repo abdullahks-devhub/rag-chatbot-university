@@ -6,6 +6,7 @@ Run this once (or whenever you add new notes):
 """
 
 import os
+import shutil
 import logging
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
@@ -65,6 +66,11 @@ def main():
         os.makedirs(DATA_DIR)
         logger.error(f"Created empty data directory at '{DATA_DIR}'. Please add your PDF notes there and re-run.")
         return
+
+    # Clear existing vector store to prevent duplicate chunks
+    if os.path.exists(CHROMA_DIR):
+        logger.info(f"Clearing existing vector store at {CHROMA_DIR}...")
+        shutil.rmtree(CHROMA_DIR, ignore_errors=True)
 
     # Load PDFs
     logger.info("=" * 50)
