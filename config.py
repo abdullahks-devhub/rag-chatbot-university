@@ -5,7 +5,7 @@ load_dotenv()
 
 # HuggingFace
 HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-LLM_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"
+LLM_MODEL = "openai/gpt-oss-120b"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # free, local, lightweight
 
 # ChromaDB

@@ -185,32 +185,42 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
     margin-top: 6px;
 }
 
-/* ── Welcome screen suggestions ── */
-.suggestion-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    max-width: 560px;
-    margin: 32px auto 0;
+/* ── Welcome screen suggestions (Streamlit Button overrides) ── */
+div[data-testid="column"] button {
+    display: block !important;
+    text-align: left !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E5E0D8 !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    color: #4a4a4a !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    height: 84px !important;
+    white-space: normal !important;
+    width: 100% !important;
 }
-.suggestion-card {
-    background: #FFFFFF;
-    border: 1px solid #E5E0D8;
-    border-radius: 12px;
-    padding: 14px 16px;
-    cursor: pointer;
-    font-size: 13px;
-    color: #4a4a4a;
-    font-weight: 400;
-    line-height: 1.4;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+
+div[data-testid="column"] button:hover {
+    background: #FDFCFA !important;
+    border-color: #C9C3BB !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
 }
-.suggestion-card strong {
-    display: block;
-    color: #1a1a1a;
-    font-weight: 500;
-    margin-bottom: 2px;
-    font-size: 13px;
+
+div[data-testid="column"] button p {
+    margin: 0 !important;
+    color: #4a4a4a !important;
+    font-size: 13px !important;
+}
+
+div[data-testid="column"] button strong {
+    display: block !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+    margin-bottom: 2px !important;
+    font-size: 13px !important;
 }
 
 /* ── Metric ── */
@@ -268,6 +278,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chain" not in st.session_state:
     st.session_state.chain = None
+if "prompt_trigger" not in st.session_state:
+    st.session_state.prompt_trigger = None
 
 if store_exists and st.session_state.chain is None:
     try:
@@ -348,13 +360,26 @@ with col_main:
             <div class="app-name" style="margin-top: 12px;">UniMind</div>
             <div class="app-tagline">Ask anything from your university notes</div>
         </div>
-        <div class="suggestion-grid">
-            <div class="suggestion-card"><strong>Summarize a topic</strong>Explain the key ideas from Chapter 3</div>
-            <div class="suggestion-card"><strong>Exam prep</strong>What are the most important concepts to know?</div>
-            <div class="suggestion-card"><strong>Deep dive</strong>Explain how AES encryption works</div>
-            <div class="suggestion-card"><strong>Compare</strong>What is the difference between DES and AES?</div>
-        </div>
         """, unsafe_allow_html=True)
+        
+        # Render suggestion buttons styled as cards
+        st.markdown('<div style="max-width: 560px; margin: 32px auto 0;">', unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("**Summarize a topic**\nExplain the key ideas from Chapter 3", key="btn_s1", use_container_width=True):
+                st.session_state.prompt_trigger = "Explain the key ideas from Chapter 3"
+                st.rerun()
+            if st.button("**Deep dive**\nExplain how AES encryption works", key="btn_s3", use_container_width=True):
+                st.session_state.prompt_trigger = "Explain how AES encryption works"
+                st.rerun()
+        with col2:
+            if st.button("**Exam prep**\nWhat are the most important concepts to know?", key="btn_s2", use_container_width=True):
+                st.session_state.prompt_trigger = "What are the most important concepts to know?"
+                st.rerun()
+            if st.button("**Compare**\nWhat is the difference between DES and AES?", key="btn_s4", use_container_width=True):
+                st.session_state.prompt_trigger = "What is the difference between DES and AES?"
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         # Compact header when chatting
         st.markdown(
@@ -377,8 +402,17 @@ with col_main:
                 )
                 st.markdown(f'<div style="margin-top:8px; display: flex; flex-wrap: wrap;">{pills}</div>', unsafe_allow_html=True)
 
-    # Input
-    if prompt := st.chat_input("Ask anything from your notes…"):
+    # Capture prompt from input or card buttons
+    chat_input_prompt = st.chat_input("Ask anything from your notes…")
+    
+    prompt = None
+    if st.session_state.prompt_trigger:
+        prompt = st.session_state.prompt_trigger
+        st.session_state.prompt_trigger = None # Clear trigger
+    elif chat_input_prompt:
+        prompt = chat_input_prompt
+
+    if prompt:
         if not store_exists:
             st.error("No notes indexed yet — upload your PDFs in the sidebar first.")
         elif st.session_state.chain is None:
