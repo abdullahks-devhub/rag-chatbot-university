@@ -114,11 +114,12 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
 
 /* ── Source pills ── */
 .source-pill {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     background: #F2EFE9;
     border: 1px solid #E0DBD3;
     border-radius: 20px;
-    padding: 3px 10px;
+    padding: 4px 10px;
     font-size: 11px;
     font-weight: 500;
     color: #7A756E;
@@ -129,7 +130,6 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
 .badge-ready {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
     background: #EDFAF4;
     border: 1px solid #B7EDD8;
     color: #1F7A5C;
@@ -141,7 +141,6 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
 .badge-not-ready {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
     background: #FEF2F2;
     border: 1px solid #FECACA;
     color: #B91C1C;
@@ -149,6 +148,18 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
     padding: 4px 10px;
     font-size: 12px;
     font-weight: 600;
+}
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+.status-dot.ready {
+    background-color: #1F7A5C;
+}
+.status-dot.not-ready {
+    background-color: #B91C1C;
 }
 
 /* ── Header ── */
@@ -273,16 +284,16 @@ with st.sidebar:
     # Status
     if store_exists:
         vec_count = get_vector_count()
-        st.markdown(f'<div class="badge-ready">● Ready</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="badge-ready"><span class="status-dot ready"></span>Ready</div>', unsafe_allow_html=True)
         st.markdown("")
         st.markdown(f'<div class="stat-box"><div class="stat-number">{vec_count:,}</div><div class="stat-label">Chunks Indexed</div></div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="badge-not-ready">● No Index Found</div>', unsafe_allow_html=True)
+        st.markdown('<div class="badge-not-ready"><span class="status-dot not-ready"></span>No Index Found</div>', unsafe_allow_html=True)
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Upload
-    with st.expander("📎 Upload Notes", expanded=not store_exists):
+    with st.expander("Upload Notes", expanded=not store_exists):
         uploaded_files = st.file_uploader(
             "PDF files",
             type=["pdf"],
@@ -328,8 +339,13 @@ with col_main:
     if not st.session_state.messages:
         st.markdown("""
         <div class="app-header">
-            <div class="app-logo">🎓</div>
-            <div class="app-name">UniMind</div>
+            <div class="app-logo">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A89880" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+                </svg>
+            </div>
+            <div class="app-name" style="margin-top: 12px;">UniMind</div>
             <div class="app-tagline">Ask anything from your university notes</div>
         </div>
         <div class="suggestion-grid">
@@ -353,8 +369,13 @@ with col_main:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
             if msg.get("sources"):
-                pills = "".join(f'<span class="source-pill">📄 {s}</span>' for s in msg["sources"])
-                st.markdown(f'<div style="margin-top:8px;">{pills}</div>', unsafe_allow_html=True)
+                pills = "".join(
+                    f'<span class="source-pill">'
+                    f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+                    f'{s}</span>'
+                    for s in msg["sources"]
+                )
+                st.markdown(f'<div style="margin-top:8px; display: flex; flex-wrap: wrap;">{pills}</div>', unsafe_allow_html=True)
 
     # Input
     if prompt := st.chat_input("Ask anything from your notes…"):
@@ -377,8 +398,13 @@ with col_main:
 
                         st.markdown(answer)
                         if sources:
-                            pills = "".join(f'<span class="source-pill">📄 {s}</span>' for s in sources)
-                            st.markdown(f'<div style="margin-top:8px;">{pills}</div>', unsafe_allow_html=True)
+                            pills = "".join(
+                                f'<span class="source-pill">'
+                                f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+                                f'{s}</span>'
+                                for s in sources
+                            )
+                            st.markdown(f'<div style="margin-top:8px; display: flex; flex-wrap: wrap;">{pills}</div>', unsafe_allow_html=True)
 
                         st.session_state.messages.append({
                             "role": "assistant",
