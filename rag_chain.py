@@ -75,7 +75,6 @@ def build_rag_chain():
         model=LLM_MODEL,
         openai_api_key=HF_TOKEN,
         openai_api_base="https://router.huggingface.co/v1",
-        max_tokens=1024,
         temperature=0.3,
     )
 

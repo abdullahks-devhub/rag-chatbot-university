@@ -48,12 +48,12 @@ def build_vector_store(chunks):
     )
 
     logger.info("Building ChromaDB vector store...")
-    vectorstore = Chroma.from_documents(
-        documents=chunks,
-        embedding=embeddings,
+    vectorstore = Chroma(
         persist_directory=CHROMA_DIR,
+        embedding_function=embeddings,
         collection_name=COLLECTION_NAME
     )
+    vectorstore.add_documents(chunks)
 
     logger.info(f"✓ Vector store saved to {CHROMA_DIR}")
     logger.info(f"✓ Total vectors stored: {vectorstore._collection.count()}")
@@ -67,19 +67,60 @@ def main():
         logger.error(f"Created empty data directory at '{DATA_DIR}'. Please add your PDF notes there and re-run.")
         return
 
-    # Clear existing vector store to prevent duplicate chunks
+    # Determine which PDF files are already indexed
+    existing_sources = set()
+    embeddings = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True}
+    )
+
     if os.path.exists(CHROMA_DIR):
-        logger.info(f"Clearing existing vector store at {CHROMA_DIR}...")
-        shutil.rmtree(CHROMA_DIR, ignore_errors=True)
+        logger.info(f"Loading existing vector store at {CHROMA_DIR}...")
+        try:
+            vectorstore = Chroma(
+                persist_directory=CHROMA_DIR,
+                embedding_function=embeddings,
+                collection_name=COLLECTION_NAME
+            )
+            # Retrieve all metadata from collection
+            results = vectorstore.get(include=["metadatas"])
+            if results and results.get("metadatas"):
+                for m in results["metadatas"]:
+                    if m and "source" in m:
+                        existing_sources.add(os.path.basename(m["source"]))
+            logger.info(f"Currently indexed files: {existing_sources}")
+        except Exception as e:
+            logger.warning(f"Could not read existing vector store: {e}. Rebuilding...")
+            shutil.rmtree(CHROMA_DIR, ignore_errors=True)
 
     # Load PDFs
     logger.info("=" * 50)
     logger.info("STEP 1: Loading PDFs")
     logger.info("=" * 50)
-    documents = load_all_pdfs(DATA_DIR)
+    
+    from pathlib import Path
+    from pdf_loader import load_pdf
+    
+    pdf_files = list(Path(DATA_DIR).rglob("*.pdf"))
+    new_pdfs = [p for p in pdf_files if p.name not in existing_sources]
+
+    if not new_pdfs:
+        logger.info("All PDF files in data/ are already indexed. Nothing to add.")
+        return
+
+    logger.info(f"Found {len(pdf_files)} PDF files in total. {len(new_pdfs)} are new and will be indexed.")
+
+    documents = []
+    for pdf_path in new_pdfs:
+        try:
+            docs = load_pdf(str(pdf_path))
+            documents.extend(docs)
+        except Exception as e:
+            logger.error(f"Failed to load {pdf_path.name}: {e}")
 
     if not documents:
-        logger.error("No documents loaded. Check your data/ directory.")
+        logger.error("No new documents loaded.")
         return
 
     # Chunk

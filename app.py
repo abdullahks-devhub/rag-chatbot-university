@@ -20,7 +20,7 @@ st.set_page_config(
 # ── CSS ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
@@ -49,12 +49,16 @@ html, body, [class*="css"] {
 
 /* ── Chat area ── */
 [data-testid="stChatMessage"] {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 20px 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid #EAE6DF !important;
+}
+[data-testid="stChatMessage"]:last-child {
+    border-bottom: none !important;
 }
 
 /* User message row */
@@ -116,14 +120,14 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
 .source-pill {
     display: inline-flex;
     align-items: center;
-    background: #F2EFE9;
-    border: 1px solid #E0DBD3;
-    border-radius: 20px;
-    padding: 4px 10px;
-    font-size: 11px;
+    background: #F5F3EE;
+    border: 1px solid #EAE6DF;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10.5px;
     font-weight: 500;
-    color: #7A756E;
-    margin: 3px 4px 3px 0;
+    color: #8C867E;
+    margin: 2px 4px 2px 0;
 }
 
 /* ── Status badge ── */
@@ -172,11 +176,24 @@ hr { border: none; border-top: 1px solid #E5E0D8; margin: 12px 0; }
     margin-bottom: 8px;
 }
 .app-name {
-    font-size: 2.4rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    letter-spacing: -0.04em;
-    line-height: 1.1;
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    background: linear-gradient(135deg, #2b2620 0%, #A89880 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-top: 12px;
+}
+.sidebar-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    background: linear-gradient(135deg, #2b2620 0%, #A89880 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 8px 0;
 }
 .app-tagline {
     font-size: 15px;
@@ -290,7 +307,7 @@ if store_exists and st.session_state.chain is None:
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### UniMind")
+    st.markdown('<div class="sidebar-title">UniMind</div>', unsafe_allow_html=True)
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Status
