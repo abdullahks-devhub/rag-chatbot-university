@@ -432,11 +432,11 @@ with col_main:
 
     # Capture prompt from input or card buttons
     chat_input_prompt = st.chat_input("Ask anything from your notes…")
-    
+
     prompt = None
     if st.session_state.prompt_trigger:
         prompt = st.session_state.prompt_trigger
-        st.session_state.prompt_trigger = None # Clear trigger
+        st.session_state.prompt_trigger = None  # Clear trigger
     elif chat_input_prompt:
         prompt = chat_input_prompt
 
@@ -446,42 +446,36 @@ with col_main:
         elif st.session_state.chain is None:
             st.error("Chain not ready. Check your HUGGINGFACEHUB_API_TOKEN.")
         else:
+            # Optimistically append user message so it's visible immediately
             st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
 
-            with st.chat_message("assistant"):
-                with st.spinner(""):
-                    try:
-                        # Build chat history for ConversationalRetrievalChain (excluding the current prompt)
-                        chat_history = []
-                        temp_user = None
-                        for msg in st.session_state.messages[:-1]:
-                            if msg["role"] == "user":
-                                temp_user = msg["content"]
-                            elif msg["role"] == "assistant" and temp_user is not None:
-                                chat_history.append((temp_user, msg["content"]))
-                                temp_user = None
+            with st.spinner("Thinking…"):
+                try:
+                    # Build chat history from all messages except the current user prompt
+                    chat_history = []
+                    temp_user = None
+                    for msg in st.session_state.messages[:-1]:
+                        if msg["role"] == "user":
+                            temp_user = msg["content"]
+                        elif msg["role"] == "assistant" and temp_user is not None:
+                            chat_history.append((temp_user, msg["content"]))
+                            temp_user = None
 
-                        from rag_chain import ask
-                        result = ask(st.session_state.chain, prompt, chat_history=chat_history)
-                        answer = format_latex(result["answer"])
-                        sources = result["sources"]
+                    from rag_chain import ask
+                    result = ask(st.session_state.chain, prompt, chat_history=chat_history)
+                    answer = format_latex(result["answer"])
+                    sources = result["sources"]
 
-                        st.markdown(answer)
-                        if sources:
-                            pills = "".join(
-                                f'<span class="source-pill">'
-                                f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; flex-shrink: 0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
-                                f'{s}</span>'
-                                for s in sources
-                            )
-                            st.markdown(f'<div style="margin-top:8px; display: flex; flex-wrap: wrap;">{pills}</div>', unsafe_allow_html=True)
+                    # Append assistant response — history loop renders it after rerun
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": answer,
+                        "sources": sources,
+                    })
+                except Exception as e:
+                    # Roll back the optimistic user message on failure
+                    st.session_state.messages.pop()
+                    st.error(f"Something went wrong: {e}")
 
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": answer,
-                            "sources": sources,
-                        })
-                    except Exception as e:
-                        st.error(f"Something went wrong: {e}")
+            # Force a clean rerun so the history loop is the single renderer
+            st.rerun()
