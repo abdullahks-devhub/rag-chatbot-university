@@ -79,19 +79,10 @@ def build_rag_chain():
         temperature=0.3,
     )
 
-    # Conversational memory — keeps last 5 exchanges
-    memory = ConversationBufferWindowMemory(
-        k=5,
-        memory_key="chat_history",
-        output_key="answer",
-        return_messages=True
-    )
-
-    # Full RAG chain with memory
+    # Full RAG chain (stateless)
     chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
-        memory=memory,
         return_source_documents=True,
         combine_docs_chain_kwargs={"prompt": RAG_PROMPT},
         verbose=False
@@ -100,12 +91,18 @@ def build_rag_chain():
     return chain
 
 
-def ask(chain, question: str) -> dict:
+def ask(chain, question: str, chat_history: list = None) -> dict:
     """
     Ask a question and get answer + sources.
     Returns: {"answer": str, "sources": list}
     """
-    result = chain.invoke({"question": question})
+    if chat_history is None:
+        chat_history = []
+
+    result = chain.invoke({
+        "question": question,
+        "chat_history": chat_history
+    })
 
     # Extract unique source pages
     sources = []

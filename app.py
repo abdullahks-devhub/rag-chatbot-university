@@ -425,8 +425,18 @@ with col_main:
             with st.chat_message("assistant"):
                 with st.spinner(""):
                     try:
+                        # Build chat history for ConversationalRetrievalChain (excluding the current prompt)
+                        chat_history = []
+                        temp_user = None
+                        for msg in st.session_state.messages[:-1]:
+                            if msg["role"] == "user":
+                                temp_user = msg["content"]
+                            elif msg["role"] == "assistant" and temp_user is not None:
+                                chat_history.append((temp_user, msg["content"]))
+                                temp_user = None
+
                         from rag_chain import ask
-                        result = ask(st.session_state.chain, prompt)
+                        result = ask(st.session_state.chain, prompt, chat_history=chat_history)
                         answer = result["answer"]
                         sources = result["sources"]
 
