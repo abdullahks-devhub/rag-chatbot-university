@@ -1,5 +1,5 @@
 ---
-title: UniMind — University RAG Study Assistant
+title: UniMind
 emoji: 🎓
 colorFrom: indigo
 colorTo: purple
