@@ -13,117 +13,164 @@ short_description: Ask questions about your university notes using AI.
 ---
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white" alt="Streamlit">
-  <img src="https://img.shields.io/badge/LangChain-1C3C3A?style=for-the-badge&logo=chainlink&logoColor=white" alt="LangChain">
-  <img src="https://img.shields.io/badge/Hugging%20Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black" alt="Hugging Face">
-  
-  <br />
-  
-  <h1>🎓 UniMind — Smart RAG Study Assistant</h1>
-  <p>An intelligent, production-grade Retrieval-Augmented Generation (RAG) assistant designed to index, query, and understand your university lecture notes and course material.</p>
+
+# 🎓 UniMind — RAG University Study Assistant
+### *Intelligent Document Querying. Additive Vector Indexing. Resilient LLM Routing.*
+
+[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![HuggingFace](https://img.shields.io/badge/Hugging%20Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/spaces/AbdullahKS-Devhub/unimind-rag-chatbot)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3A?style=for-the-badge&logo=chainlink&logoColor=white)](https://langchain.com/)
+
+<br/>
+
+> **Upload your university lecture notes. Let AI index the context. Answer questions instantly.**
+
+<br/>
+
+🚀 **[Try the Live Demo →](https://huggingface.co/spaces/AbdullahKS-Devhub/unimind-rag-chatbot)**
+
 </div>
 
-<br />
+---
+
+## ✨ Features
+
+- ⚡ **Additive PDF Ingestion** — Upload notes via the UI and only new documents get indexed, fully preserving your existing database chunks
+- 👁️ **Smart Multi-Format OCR** — Auto-detects scanned documents, executing PyMuPDF & Tesseract OCR dynamically to extract text
+- 🛡️ **Resilient LLM Routing** — Primary model `openai/gpt-oss-120b` features exponential backoff retries and falls back to `Qwen/Qwen2.5-72B-Instruct` on rate limits
+- 💬 **Stateless Session History** — Maintains isolated, stateless memory channels per session to ensure zero data bleeding and high concurrency
+- 🎨 **Premium Claude-Style UI** — Minimalist beige theme (`#FAF9F7`) with Outfit typography and interactive grid-based suggestion cards
+- 📐 **LaTeX Math Support** — Formats mathematical equations, formulas, fractions, and symbols using an integrated KaTeX LaTeX block and inline parser
+- 🌐 **Zero Setup for Users** — Fully deployed and pre-indexed on Hugging Face Spaces
 
 ---
 
-## 🌟 Key Features
+## 🛠️ Tech Stack
 
-*   **⚡ Additive PDF Ingestion**: Upload documents via the UI or folder. The ingestion engine is fully idempotent and additive—it checks existing document metadatas in ChromaDB, skips duplicates, and appends only new course materials.
-*   **👁️ Smart Multi-Format OCR**: Automatically detects scanned/image-only PDFs and routes them through a Tesseract OCR engine (via PyMuPDF & PIL) to extract text, while handling text-based PDFs natively with `pdfplumber`.
-*   **🛡️ Resilient LLM Routing**: 
-    *   Uses `openai/gpt-oss-120b` as the primary reasoning model.
-    *   Includes **exponential backoff retries** to handle Hugging Face's serverless queue and traffic spikes.
-    *   Features a **transparent fallback layer** that routes queries to `Qwen/Qwen2.5-72B-Instruct` if the primary service experiences downtime.
-*   **💬 Context-Aware Stateless History**: Conversational flow is preserved dynamically across runs. Chat history is fed directly into the model as message pairs, ensuring clean state separation and preventing memory leaks or cross-session data bleeding.
-*   **🎨 Premium Claude-inspired UI**: A clean, minimalist off-white/beige aesthetic (`#FAF9F7`) built using custom CSS injections, dynamic grid-based suggestion cards, and professional **Google Outfit** typography.
-*   **📐 Math & LaTeX Support**: Fully formats mathematical equations (fractions, sub/superscripts, math syntax) from your lecture notes using an integrated KaTeX LaTeX block and inline parser.
+| Layer | Technology |
+|---|---|
+| **Frontend** | Streamlit + Custom CSS (Premium Beige Theme) |
+| **Orchestration** | LangChain (ConversationalRetrievalChain) |
+| **Vector Database** | ChromaDB (MMR Retriever) |
+| **LLM Inference Engine** | HF Router API (`openai/gpt-oss-120b` / `Qwen/Qwen2.5-72B-Instruct`) |
+| **Embeddings Model** | HuggingFace sentence-transformers (`all-MiniLM-L6-v2`) |
+| **PDF Extraction & OCR**| pdfplumber + PyMuPDF + Tesseract |
+| **Environment Control** | Python Dotenv |
+| **Deployment** | Hugging Face Spaces |
 
 ---
 
-## 🛠️ Architecture Workflow
+## 🧠 How It Works
 
 ```mermaid
 graph TD
-    A[Upload PDF / notes] --> B[Smart PDF Loader]
-    B -->|Text PDF| C[Direct Parse]
+    A[Student Uploads PDF] --> B{Smart PDF Loader}
+    B -->|Text PDF| C[pdfplumber Extract]
     B -->|Scanned PDF| D[Tesseract OCR]
-    C --> E[Recursive text splitter]
+    C --> E[Recursive Character Splitter]
     D --> E
-    E --> F[Generate Embeddings]
-    F -->|all-MiniLM-L6-v2| G[ChromaDB Vector Store]
-    
-    H[Student Query] --> I[MMR Retrieval]
-    G -->|Retrieve Top K Chunks| I
-    I --> J[Context + Query Assembler]
-    J --> K[LLM Router Engine]
-    K -->|Primary: gpt-oss-120b| L[LLM Inference]
-    K -->|429 / Fallback: Qwen-2.5-72B| M[Backup LLM Inference]
-    L --> N[KaTeX Formatted Output]
-    M --> N
+    E --> F[ChromaDB Additive Store]
+    G[Student Query] --> H{Conversational Engine}
+    F -->|Query Context Chunks| H
+    H -->|Primary Router| I[gpt-oss-120b]
+    H -->|Fallback on 429| J[Qwen-2.5-72B-Instruct]
+    I --> K[LaTeX KaTeX Formatted Answer]
+    J --> K
 ```
 
 ---
 
-## 📂 Project Architecture
+## 📥 Ingestion Parameters
 
-*   `app.py` — The core Streamlit web application. Contains the premium UI, session state handlers, suggestion card integrations, and LaTeX rendering formatting.
-*   `rag_chain.py` — Builds the Conversational Retrieval Chain, setups the LLM Router (GPT-OSS-120B with Qwen-72B fallback), and handles exponential backoff retry.
-*   `ingest.py` — Coordinates document loading, chunks the text, embeds it using local sentence-transformers, and inserts chunks into the Chroma database.
-*   `pdf_loader.py` — Text extraction wrapper. Inspects PDFs to distinguish text files from scans and applies PyMuPDF OCR fallback dynamically.
-*   `config.py` — Global configuration parameters for models, pathing, and RAG chunk thresholds.
+<details>
+<summary>📐 <strong>Text Splitting Configuration</strong></summary>
+<br/>
+
+| Parameter | Type | Default Value | Description |
+|---|---|---|---|
+| **Chunk Size** | Integer | 1000 characters | Maximum size of each text segment |
+| **Chunk Overlap** | Integer | 200 characters | Overlap size between consecutive chunks to preserve structural context |
+
+</details>
+
+<details>
+<summary>🔍 <strong>Retrieval Constraints</strong></summary>
+<br/>
+
+| Parameter | Type | Default Value | Description |
+|---|---|---|---|
+| **Top K Chunks** | Integer | 5 | Number of relevant chunks retrieved from ChromaDB to construct prompt context |
+| **Search Type** | String | `mmr` (Maximal Marginal Relevance) | Retrieval algorithm used to optimize relevance and reduce redundancy |
+
+</details>
 
 ---
 
-## 🔑 Environment Configuration
+## 🚀 Run Locally
 
-Create a `.env` file in the root directory to store your credentials:
-
-```ini
-# Hugging Face write-access token to authenticate with the Inference API
-HUGGINGFACEHUB_API_TOKEN="your_hugging_face_token"
-```
-
----
-
-## 🚀 Local Deployment
-
-Get UniMind up and running locally in seconds:
-
-### 1. Installation
-
+**1. Clone the repo**
 ```bash
-# Clone the repository
 git clone https://github.com/abdullahks-devhub/rag-chatbot-university.git
 cd rag-chatbot-university
+```
 
-# Create and activate virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
+**2. Setup Virtual Environment & Dependencies**
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. File Indexing
+**3. Configure Credentials**
+Create a `.env` file in the root directory:
+```ini
+HUGGINGFACEHUB_API_TOKEN="your_huggingface_access_token"
+```
 
-Place your course notes (PDFs) into the `data/` folder and trigger the ingestion pipeline:
-
+**4. Index PDF Notes**
+Place your lecture PDFs in the `data/` folder and build the database:
 ```bash
 python ingest.py
 ```
 
-### 3. Run Application
-
+**5. Start the Application**
 ```bash
 streamlit run app.py
 ```
-
-Open `http://localhost:8501` to access your local UniMind interface.
+*The UI will launch on `http://localhost:8501`.*
 
 ---
 
-## 🔗 Connect
+## 📁 Project Structure
 
-*   **GitHub**: [github.com/abdullahks-devhub](https://github.com/abdullahks-devhub)
-*   **HuggingFace Spaces**: [huggingface.co/spaces/AbdullahKS-Devhub](https://huggingface.co/spaces/AbdullahKS-Devhub)
+```text
+.
+├── data/                     # Raw PDFs directory (user-loaded lecture notes)
+├── chroma_db/                # Persisted ChromaDB Vector Store
+├── app.py                    # Main Streamlit web application & CSS layout
+├── rag_chain.py              # LLM Routing, Retries, and RAG configuration
+├── ingest.py                 # Document processing & ingestion coordinator
+├── pdf_loader.py             # Smart multi-format PDF loader & OCR pipeline
+├── config.py                 # Paths, models, and retrieval configuration
+├── requirements.txt          # Python dependencies
+└── packages.txt              # System level dependencies for Space environment
+```
+
+---
+
+## ⚠️ Disclaimer
+
+> This application is built **for educational and study assistance purposes only**.
+> It is **not** a substitute for official university guidance, text books, or direct professor consultations.
+> Always verify critical scientific formulas and details against official textbooks before exams.
+
+---
+
+<div align="center">
+
+Made with ❤️ by **[Abdullah Khan](https://github.com/abdullahks-devhub)**
+
+⭐ Star this repo if you found it useful!
+
+</div>
