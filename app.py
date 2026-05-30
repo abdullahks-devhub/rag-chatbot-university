@@ -180,7 +180,7 @@ def get_vector_stats():
         embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL, model_kwargs={"device": "cpu"})
         vs = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings, collection_name=COLLECTION_NAME)
         return vs._collection.count()
-    except:
+    except Exception:
         return 0
 
 
@@ -195,11 +195,11 @@ with st.sidebar:
 
     if store_exists:
         vec_count = get_vector_stats()
-        st.markdown(f'<span class="status-ready">● READY</span>', unsafe_allow_html=True)
+        st.markdown('<span class="status-ready">● READY</span>', unsafe_allow_html=True)
         st.markdown("")
         st.markdown(f'<div class="metric-card"><div class="metric-value">{vec_count:,}</div><div class="metric-label">Vectors Indexed</div></div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<span class="status-not-ready">● NOT READY</span>', unsafe_allow_html=True)
+        st.markdown('<span class="status-not-ready">● NOT READY</span>', unsafe_allow_html=True)
         st.warning("No notes indexed yet.\nRun `python ingest.py` first.")
 
     st.markdown("---")
@@ -220,7 +220,8 @@ with st.sidebar:
                     out.write(f.read())
             with st.spinner("Ingesting notes..."):
                 import subprocess
-                result = subprocess.run(["python", "ingest.py"], capture_output=True, text=True)
+                import sys
+                result = subprocess.run([sys.executable, "ingest.py"], capture_output=True, text=True)
                 if result.returncode == 0:
                     st.success("✓ Notes indexed successfully!")
                     st.cache_resource.clear()

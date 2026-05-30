@@ -7,7 +7,6 @@ Handles all PDF types:
 - Corrupted/edge cases → pypdf fallback
 """
 
-import os
 import logging
 from typing import List
 from pathlib import Path
@@ -125,7 +124,7 @@ def load_pdf(pdf_path: str) -> List[Document]:
             logger.info(f"  ✓ Loaded {len(docs)} pages from {filename}")
             return docs
         else:
-            logger.warning(f"  pdfplumber got no content, trying fallback...")
+            logger.warning("  pdfplumber got no content, trying fallback...")
             return _load_with_pypdf_fallback(pdf_path)
     except Exception as e:
         logger.warning(f"  pdfplumber failed ({e}), trying fallback...")

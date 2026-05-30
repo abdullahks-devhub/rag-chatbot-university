@@ -11,6 +11,7 @@ Endpoints:
 import os
 import logging
 import subprocess
+import sys
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -111,7 +112,7 @@ def trigger_ingest():
     """Trigger re-ingestion of notes and reload the chain."""
     global rag_chain
     try:
-        subprocess.run(["python", "ingest.py"], check=True)
+        subprocess.run([sys.executable, "ingest.py"], check=True)
         rag_chain = build_rag_chain()
         return {"status": "Ingestion complete. Chain reloaded."}
     except subprocess.CalledProcessError as e:
