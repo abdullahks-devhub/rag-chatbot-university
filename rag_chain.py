@@ -6,10 +6,11 @@ Builds the RAG pipeline:
 
 import logging
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings, ChatHuggingFace, HuggingFaceEndpoint
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
 
 from config import (
     HF_TOKEN, LLM_MODEL, EMBEDDING_MODEL,
@@ -69,15 +70,14 @@ def build_rag_chain():
         }
     )
 
-    # LLM
-    llm_endpoint = HuggingFaceEndpoint(
-        repo_id=LLM_MODEL,
-        task="text-generation",
-        max_new_tokens=1024,
-        temperature=0.3,      # lower = more factual, less creative (good for study)
-        huggingfacehub_api_token=HF_TOKEN,
+    # LLM — openai/gpt-oss-120b via HuggingFace Inference Router
+    llm = ChatOpenAI(
+        model=LLM_MODEL,
+        openai_api_key=HF_TOKEN,
+        openai_api_base="https://router.huggingface.co/v1",
+        max_tokens=1024,
+        temperature=0.3,
     )
-    llm = ChatHuggingFace(llm=llm_endpoint)
 
     # Conversational memory — keeps last 5 exchanges
     memory = ConversationBufferWindowMemory(
