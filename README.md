@@ -1,5 +1,5 @@
 ---
-title: UniMind - University RAG Study Assistant
+title: UniMind — University RAG Study Assistant
 emoji: 🎓
 colorFrom: indigo
 colorTo: purple
@@ -7,49 +7,52 @@ sdk: streamlit
 sdk_version: "1.45.1"
 app_file: app.py
 pinned: false
+license: mit
+short_description: Ask questions about your university notes using AI.
 ---
 
 # 🎓 UniMind — University RAG Study Assistant
 
-A production-grade RAG (Retrieval-Augmented Generation) chatbot that answers questions from your university notes.
+A **Retrieval-Augmented Generation (RAG)** chatbot that answers questions from university lecture notes and PDFs.
 
-## Features
-- 📄 Upload any PDF notes (text-based, scanned, mixed)
-- 🔍 Semantic search with ChromaDB vector store
-- 🧠 Powered by HuggingFace LLM (gpt-oss-120b)
-- 💬 Conversational memory (remembers last 5 exchanges)
-- 📚 Source citations for every answer
+## ✨ Features
 
-## Tech Stack
-- **LangChain** — RAG orchestration
-- **ChromaDB** — Local vector database
-- **sentence-transformers** — Free local embeddings
-- **HuggingFace Inference API** — LLM (free tier)
-- **Streamlit** — Chat UI
-- **FastAPI** — Backend API
-- **pdfplumber + PyMuPDF + Tesseract** — Universal PDF parsing
+- **RAG Pipeline** — retrieves relevant context from your documents before answering
+- **Local Embeddings** — uses `sentence-transformers/all-MiniLM-L6-v2` (no API cost)
+- **LLM via HuggingFace** — powered by `mistralai/Mistral-7B-Instruct-v0.2`
+- **Conversation Memory** — remembers the last 5 exchanges in a session
+- **Multi-format PDF support** — text-based and scanned PDFs (with OCR)
 
-## Setup (Local)
+## 🚀 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Streamlit |
+| RAG Framework | LangChain |
+| Vector Store | ChromaDB |
+| Embeddings | sentence-transformers |
+| LLM | Mistral-7B via HuggingFace Inference API |
+
+## 🔑 Required Secrets
+
+Set this in your HuggingFace Space → **Settings → Repository secrets**:
+
+| Secret Name | Description |
+|---|---|
+| `HUGGINGFACEHUB_API_TOKEN` | Your HuggingFace API token (free at hf.co/settings/tokens) |
+
+## 📁 Local Setup
+
 ```bash
-# 1. Clone and install
+git clone https://github.com/abdullahks-devhub/rag-chatbot-university.git
+cd rag-chatbot-university
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# 2. Add your HuggingFace token
-echo "HUGGINGFACEHUB_API_TOKEN=your_token_here" > .env
-
-# 3. Add your PDF notes to data/
-mkdir data
-# copy your PDFs into data/
-
-# 4. Ingest notes
+# Place your PDFs in the data/ folder, then:
 python ingest.py
 
-# 5. Run the app
+# Run the app:
 streamlit run app.py
-
-# 6. (Optional) Run the API separately
-uvicorn api:app --reload --port 8000
 ```
-
-## HuggingFace Spaces Deployment
-Set `HUGGINGFACEHUB_API_TOKEN` as a **Secret** in your Space settings.

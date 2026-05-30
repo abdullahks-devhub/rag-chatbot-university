@@ -78,7 +78,7 @@ def stats():
     if not os.path.exists(CHROMA_DIR):
         return {"vectors": 0, "status": "No vector store found. Run ingest.py first."}
     try:
-        from langchain_community.vectorstores import Chroma
+        from langchain_chroma import Chroma
         from langchain_huggingface import HuggingFaceEmbeddings
         from config import EMBEDDING_MODEL, COLLECTION_NAME
         embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL, model_kwargs={"device": "cpu"})

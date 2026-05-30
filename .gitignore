@@ -5,3 +5,5 @@ data/
 chroma_db/
 .idea/
 .DS_Store
+.venv/
+venv/

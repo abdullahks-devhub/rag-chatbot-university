@@ -175,7 +175,7 @@ def load_chain():
 def get_vector_stats():
     from config import CHROMA_DIR, COLLECTION_NAME, EMBEDDING_MODEL
     try:
-        from langchain_community.vectorstores import Chroma
+        from langchain_chroma import Chroma
         from langchain_huggingface import HuggingFaceEmbeddings
         embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL, model_kwargs={"device": "cpu"})
         vs = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings, collection_name=COLLECTION_NAME)

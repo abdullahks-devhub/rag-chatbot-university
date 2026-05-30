@@ -8,7 +8,7 @@ Run this once (or whenever you add new notes):
 import os
 import logging
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from pdf_loader import load_all_pdfs
