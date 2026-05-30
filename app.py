@@ -267,6 +267,17 @@ div[data-testid="column"] button strong {
 """, unsafe_allow_html=True)
 
 
+# ── LaTeX Delimiter Fix for Streamlit ─────────────────────────────────────────
+def format_latex(text: str) -> str:
+    if not text:
+        return text
+    # Replace block LaTeX delimiters with $$ with newlines
+    text = text.replace(r"\[", "\n$$\n").replace(r"\]", "\n$$\n")
+    # Replace inline LaTeX delimiters with $
+    text = text.replace(r"\(", "$").replace(r"\)", "$")
+    return text
+
+
 # ── Cached resources ─────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner="Loading knowledge base...")
 def load_chain():
@@ -454,7 +465,7 @@ with col_main:
 
                         from rag_chain import ask
                         result = ask(st.session_state.chain, prompt, chat_history=chat_history)
-                        answer = result["answer"]
+                        answer = format_latex(result["answer"])
                         sources = result["sources"]
 
                         st.markdown(answer)
